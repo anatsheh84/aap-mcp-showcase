@@ -19,8 +19,10 @@
       ansible.windows.win_service:
         name: W3SVC
         state: started
+      when: not ansible_check_mode
 
     - name: Verify IIS responds with HTTP 200
       ansible.windows.win_uri:
         url: http://localhost/
         status_code: 200
+      when: not ansible_check_mode
