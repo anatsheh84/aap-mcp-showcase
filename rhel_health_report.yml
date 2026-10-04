@@ -35,7 +35,7 @@
           uptime_hours: "{{ (ansible_uptime_seconds / 3600) | round(1) }}"
           load_15min: "{{ ansible_loadavg['15m'] }}"
           cpus: "{{ ansible_processor_vcpus }}"
-          memory_used_percent: "{{ ((1 - ansible_memavailable_mb / ansible_memtotal_mb) * 100) | round(0) | int }}"
+          memory_used_percent: "{{ ((1 - ansible_memory_mb.nocache.free / ansible_memtotal_mb) * 100) | round(0) | int }}"
           root_disk_used_percent: "{{ ((1 - root_fs.size_available / root_fs.size_total) * 100) | round(0) | int }}"
           failed_services: "{{ failed_units.stdout_lines | map('split') | map('first') | list }}"
           pending_updates: "{{ updates.stdout_lines | select('match', '^\\S+\\s+\\S+\\s+\\S+') | list | length }}"
