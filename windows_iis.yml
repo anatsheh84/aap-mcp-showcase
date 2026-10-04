@@ -29,20 +29,16 @@
         name: W3SVC
         state: started
 
-    - name: Wait for IIS to start listening on port 80
-      ansible.windows.win_wait_for:
-        host: 127.0.0.1
-        port: 80
-        timeout: 30
-      when: not ansible_check_mode
-
     - name: Retrieve IIS default page from the target host
-      ansible.builtin.uri:
+      ansible.windows.win_uri:
         url: http://127.0.0.1/
         return_content: true
         status_code: 200
         timeout: 10
       register: iis_page
+      retries: 5
+      delay: 5
+      until: iis_page.status == 200
       when: not ansible_check_mode
 
     - name: Validate IIS default page contains expected content
