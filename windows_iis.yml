@@ -2,7 +2,6 @@
 - name: Install and configure IIS on Windows hosts
   hosts: all
   gather_facts: true
-  become: true
   tasks:
 
     - name: Ensure IIS Web-Server feature with management tools is installed
@@ -42,7 +41,7 @@
       ansible.builtin.assert:
         that:
           - iis_page.status == 200
-          - "'{{ ansible_hostname }}' in iis_page.content"
+          - ansible_hostname in iis_page.content
           - "'Deployed by Ansible Automation Platform' in iis_page.content"
         fail_msg: "IIS default page does not contain the expected hostname or deployment notice."
       when: not ansible_check_mode
