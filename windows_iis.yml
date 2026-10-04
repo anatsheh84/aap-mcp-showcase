@@ -30,12 +30,14 @@
         state: started
       when: not ansible_check_mode
 
-    - name: Retrieve IIS default page
+    - name: Retrieve IIS default page from localhost
       ansible.builtin.uri:
         url: http://localhost/
         return_content: true
         status_code: 200
       register: iis_page
+      delegate_to: localhost
+      run_once: true
       when: not ansible_check_mode
 
     - name: Validate IIS default page contains expected content
@@ -45,4 +47,6 @@
           - ansible_hostname in iis_page.content
           - "'Deployed by Ansible Automation Platform' in iis_page.content"
         fail_msg: "IIS default page does not contain the expected hostname or deployment notice."
+      delegate_to: localhost
+      run_once: true
       when: not ansible_check_mode
