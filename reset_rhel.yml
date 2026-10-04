@@ -1,0 +1,22 @@
+---
+# Puts the RHEL demo host back to its starting state: no web server.
+- name: Reset the RHEL demo host
+  hosts: all
+  become: true
+  tasks:
+    - name: Stop the web server when it is there
+      ansible.builtin.systemd:
+        name: httpd
+        state: stopped
+        enabled: false
+      failed_when: false
+
+    - name: Remove the web server
+      ansible.builtin.dnf:
+        name: httpd
+        state: absent
+
+    - name: Remove the status page
+      ansible.builtin.file:
+        path: /var/www/html/index.html
+        state: absent

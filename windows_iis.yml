@@ -1,48 +1,11 @@
 ---
-- name: Install and configure IIS on Windows hosts
+# PLACEHOLDER - to be written by the AI assistant during the showcase (docs/MCP-SHOWCASE.md,
+# prompt 5): install IIS on the Windows host, publish a status page, verify that it answers.
+# `make mcp-showcase` puts this placeholder back, so the demo can be repeated.
+- name: Install IIS and publish a status page (not written yet)
   hosts: all
-  gather_facts: true
-  become: true
+  gather_facts: false
   tasks:
-
-    - name: Ensure IIS Web-Server feature with management tools is installed
-      ansible.windows.win_feature:
-        name:
-          - Web-Server
-          - Web-Mgmt-Tools
-        state: present
-
-    - name: Deploy status page to the default site
-      ansible.windows.win_copy:
-        dest: C:\inetpub\wwwroot\index.html
-        content: |
-          <html>
-          <head><title>Status</title></head>
-          <body>
-          <h1>{{ ansible_hostname }}</h1>
-          <p>Deployed by Ansible Automation Platform</p>
-          </body>
-          </html>
-        force: true
-
-    - name: Ensure the W3SVC service is started
-      ansible.windows.win_service:
-        name: W3SVC
-        state: started
-
-    - name: Retrieve IIS default page
-      ansible.builtin.uri:
-        url: http://localhost/
-        return_content: true
-        status_code: 200
-      register: iis_page
-      when: not ansible_check_mode
-
-    - name: Validate IIS default page contains expected content
-      ansible.builtin.assert:
-        that:
-          - iis_page.status == 200
-          - "'{{ ansible_hostname }}' in iis_page.content"
-          - "'Deployed by Ansible Automation Platform' in iis_page.content"
-        fail_msg: "IIS default page does not contain the expected hostname or deployment notice."
-      when: not ansible_check_mode
+    - name: Nothing here yet
+      ansible.builtin.fail:
+        msg: "windows_iis.yml is still the placeholder - ask the assistant to write it."

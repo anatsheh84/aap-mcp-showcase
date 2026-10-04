@@ -1,0 +1,17 @@
+---
+# Puts the Windows demo host back to its starting state: no IIS.
+- name: Reset the Windows demo host
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Remove IIS
+      ansible.windows.win_feature:
+        name:
+          - Web-Server
+          - Web-Mgmt-Tools
+        state: absent
+      register: iis
+
+    - name: Reboot when the removal needs it
+      ansible.windows.win_reboot:
+      when: iis.reboot_required | default(false)
