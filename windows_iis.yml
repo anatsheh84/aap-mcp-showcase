@@ -22,19 +22,20 @@
       ansible.windows.win_service:
         name: W3SVC
         state: started
-      when: not ansible_check_mode
 
     - name: Verify that IIS returns the expected page
       ansible.windows.win_uri:
         url: http://localhost/
         return_content: true
         status_code: 200
+        timeout: 30
       register: iis_page
-      when: not ansible_check_mode
+      retries: 5
+      delay: 10
+      until: iis_page.status == 200
 
     - name: Assert the page contains the expected content
       ansible.builtin.assert:
         that:
           - "'{{ ansible_hostname }}' in iis_page.content"
           - "'Deployed by Ansible Automation Platform' in iis_page.content"
-      when: not ansible_check_mode
