@@ -39,5 +39,5 @@
           root_disk_used_percent: "{{ ((1 - root_fs.size_available / root_fs.size_total) * 100) | round(0) | int }}"
           failed_services: "{{ failed_units.stdout_lines | map('split') | map('first') | list }}"
           pending_updates: "{{ updates.stdout_lines | select('match', '^\\S+\\s+\\S+\\s+\\S+') | list | length }}"
-          pending_security_updates: "{{ security_updates.stdout_lines | default([]) | select('match', '^RH[SB]A|^\\S+ +\\S+/Sec') | list | length }}"
+          pending_security_advisories: "{{ security_updates.stdout_lines | default([]) | select('match', '^RHSA') | map('split') | map('first') | unique | list | length }}"
           selinux: "{{ ansible_selinux.mode | default('disabled') }}"
