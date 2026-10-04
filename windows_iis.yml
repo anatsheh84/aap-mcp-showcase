@@ -1,1 +1,35 @@
+---
+- name: Install IIS and deploy status page
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Install IIS with management tools
+      ansible.windows.win_feature:
+        name: Web-Server
+        include_management_tools: true
+        state: present
 
+    - name: Write status page to IIS root
+      ansible.windows.win_copy:
+        content: |
+          <html>
+          <body>
+          <h1>{{ ansible_nodename }}</h1>
+          <p>Deployed by Ansible Automation Platform</p>
+          </body>
+          </html>
+        dest: C:\inetpub\wwwroot\index.html
+
+    - name: Ensure W3SVC service is started
+      ansible.windows.win_service:
+        name: W3SVC
+        state: started
+      when: not ansible_check_mode
+
+    - name: Verify HTTP status page is returned
+      ansible.windows.win_uri:
+        url: http://localhost/
+        return_content: true
+      when: not ansible_check_mode
+      register: http_response
+      failed_when: "'Deployed by Ansible Automation Platform' not in http_response.content"
