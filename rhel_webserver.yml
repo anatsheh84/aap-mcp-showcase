@@ -1,0 +1,40 @@
+---
+# Installs and starts a web server with a status page, then verifies that it answers.
+#   web_package   package to install (default httpd)
+#   web_service   service to start   (default httpd)
+- name: Deploy a web server on RHEL
+  hosts: all
+  become: true
+  vars:
+    web_package: httpd
+    web_service: httpd
+  tasks:
+    - name: Install {{ web_package }}
+      ansible.builtin.dnf:
+        name: "{{ web_package }}"
+        state: present
+
+    - name: Status page
+      ansible.builtin.copy:
+        dest: /var/www/html/index.html
+        mode: "0644"
+        content: |
+          <h1>{{ inventory_hostname }}</h1>
+          <p>Deployed by Ansible Automation Platform on {{ ansible_date_time.iso8601 }}.</p>
+
+    - name: Start and enable {{ web_service }}
+      ansible.builtin.systemd:
+        name: "{{ web_service }}"
+        state: started
+        enabled: true
+
+    - name: The web server answers
+      ansible.builtin.uri:
+        url: http://localhost/
+        return_content: true
+      register: page
+      failed_when: inventory_hostname not in page.content
+
+    - name: Result
+      ansible.builtin.debug:
+        msg: "{{ web_service }} is serving the status page on {{ inventory_hostname }} (HTTP {{ page.status }})"

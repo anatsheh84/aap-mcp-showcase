@@ -1,0 +1,43 @@
+---
+# Read-only health report for RHEL hosts. Changes nothing.
+- name: RHEL health report
+  hosts: all
+  gather_facts: true
+  become: true
+  tasks:
+    - name: Root filesystem usage
+      ansible.builtin.set_fact:
+        root_fs: "{{ ansible_mounts | selectattr('mount', 'equalto', '/') | first }}"
+
+    - name: Failed systemd units
+      ansible.builtin.command: systemctl --failed --no-legend --plain
+      register: failed_units
+      changed_when: false
+
+    - name: Pending package updates
+      ansible.builtin.command: dnf -q check-update
+      register: updates
+      changed_when: false
+      failed_when: updates.rc not in [0, 100]     # 100 = updates are available
+
+    - name: Pending security updates
+      ansible.builtin.command: dnf -q updateinfo list --security --available
+      register: security_updates
+      changed_when: false
+      failed_when: false
+
+    - name: Health report
+      ansible.builtin.debug:
+        msg:
+          host: "{{ inventory_hostname }}"
+          os: "{{ ansible_distribution }} {{ ansible_distribution_version }}"
+          kernel: "{{ ansible_kernel }}"
+          uptime_hours: "{{ (ansible_uptime_seconds / 3600) | round(1) }}"
+          load_15min: "{{ ansible_loadavg['15m'] }}"
+          cpus: "{{ ansible_processor_vcpus }}"
+          memory_used_percent: "{{ ((1 - ansible_memavailable_mb / ansible_memtotal_mb) * 100) | round(0) | int }}"
+          root_disk_used_percent: "{{ ((1 - root_fs.size_available / root_fs.size_total) * 100) | round(0) | int }}"
+          failed_services: "{{ failed_units.stdout_lines | map('split') | map('first') | list }}"
+          pending_updates: "{{ updates.stdout_lines | select('match', '^\\S+\\s+\\S+\\s+\\S+') | list | length }}"
+          pending_security_updates: "{{ security_updates.stdout_lines | default([]) | select('match', '^RH[SB]A|^\\S+ +\\S+/Sec') | list | length }}"
+          selinux: "{{ ansible_selinux.mode | default('disabled') }}"

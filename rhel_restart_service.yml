@@ -1,0 +1,25 @@
+---
+# Restarts one service and reports its state.
+#   service_name   the systemd unit to restart (required)
+- name: Restart a service on RHEL
+  hosts: all
+  become: true
+  tasks:
+    - name: A service name is required
+      ansible.builtin.assert:
+        that: service_name is defined and service_name | length > 0
+        fail_msg: "Pass service_name, for example service_name=httpd"
+
+    - name: Restart {{ service_name }}
+      ansible.builtin.systemd:
+        name: "{{ service_name }}"
+        state: restarted
+
+    - name: State after the restart
+      ansible.builtin.command: systemctl is-active {{ service_name }}
+      register: state
+      changed_when: false
+
+    - name: Result
+      ansible.builtin.debug:
+        msg: "{{ service_name }} on {{ inventory_hostname }} is {{ state.stdout }}"
