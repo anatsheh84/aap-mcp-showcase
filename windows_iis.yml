@@ -1,37 +1,28 @@
 ---
-- name: Install IIS and deploy status page
+- name: Configure IIS on Windows hosts
   hosts: all
+  become: false
   gather_facts: true
-  connection: winrm
-  vars:
-    iis_features:
-      - Web-Server
-      - Web-Mgmt-Tools
   tasks:
-    - name: Ensure IIS Web Server feature is present
+    - name: Install IIS with management tools
       ansible.windows.win_feature:
-        name: "{{ item }}"
+        name: Web-Server
         state: present
-        include_sub_features: true
-      loop: "{{ iis_features }}"
+        include_management_tools: true
 
-    - name: Deploy IIS status page
+    - name: Deploy status page
       ansible.windows.win_copy:
         dest: C:\inetpub\wwwroot\index.html
-        content: |
-          {{ ansible_hostname }} - Deployed by Ansible Automation Platform
+        content: "Status: {{ ansible_hostname }}\r\n\r\nDeployed by Ansible Automation Platform"
 
-    - name: Ensure the World Wide Web Publishing Service is started
+    - name: Start W3SVC service
       ansible.windows.win_service:
         name: W3SVC
         state: started
-      when: not ansible_check_mode
+      check_mode: false
 
-    - name: Verify IIS is serving the status page
+    - name: Verify IIS responds with HTTP 200
       ansible.windows.win_uri:
         url: http://localhost/
-        method: GET
-        return_content: false
         status_code: 200
-      register: iis_check
-      when: not ansible_check_mode
+      check_mode: false
