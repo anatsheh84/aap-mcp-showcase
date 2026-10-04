@@ -1,27 +1,21 @@
 ---
-- name: Install and configure IIS on Windows hosts
+- name: Install IIS and deploy a status page
   hosts: all
   gather_facts: true
   tasks:
-
-    - name: Ensure IIS Web-Server feature with management tools is installed
+    - name: Install the IIS Web-Server feature with management tools
       ansible.windows.win_feature:
-        name:
-          - Web-Server
-          - Web-Mgmt-Tools
+        name: Web-Server
         state: present
+        include_sub_features: true
+        include_management_tools: true
 
-    - name: Deploy status page to the default site
+    - name: Deploy a simple status page
       ansible.windows.win_copy:
         dest: C:\inetpub\wwwroot\index.html
         content: |
-          <html>
-          <head><title>Status</title></head>
-          <body>
-          <h1>{{ ansible_hostname }}</h1>
-          <p>Deployed by Ansible Automation Platform</p>
-          </body>
-          </html>
+          {{ ansible_hostname }}
+          Deployed by Ansible Automation Platform
         force: true
 
     - name: Ensure the W3SVC service is started
@@ -29,23 +23,17 @@
         name: W3SVC
         state: started
 
-    - name: Retrieve IIS default page from the target host
+    - name: Verify that IIS returns the expected page
       ansible.windows.win_uri:
-        url: http://127.0.0.1/
+        url: http://localhost/
         return_content: true
         status_code: 200
-        timeout: 10
       register: iis_page
-      retries: 5
-      delay: 5
-      until: iis_page.status == 200
       when: not ansible_check_mode
 
-    - name: Validate IIS default page contains expected content
+    - name: Assert the page contains the expected content
       ansible.builtin.assert:
         that:
-          - iis_page.status == 200
-          - ansible_hostname in iis_page.content
+          - "'{{ ansible_hostname }}' in iis_page.content"
           - "'Deployed by Ansible Automation Platform' in iis_page.content"
-        fail_msg: "IIS default page does not contain the expected hostname or deployment notice."
       when: not ansible_check_mode
