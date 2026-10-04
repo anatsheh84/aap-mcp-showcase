@@ -1,28 +1,11 @@
 ---
-- name: Configure IIS on Windows hosts
+# PLACEHOLDER - to be written by the AI assistant during the showcase (docs/MCP-SHOWCASE.md,
+# prompt 5): install IIS on the Windows host, publish a status page, verify that it answers.
+# `make mcp-showcase` puts this placeholder back, so the demo can be repeated.
+- name: Install IIS and publish a status page (not written yet)
   hosts: all
-  become: false
-  gather_facts: true
+  gather_facts: false
   tasks:
-    - name: Install IIS with management tools
-      ansible.windows.win_feature:
-        name: Web-Server
-        state: present
-        include_management_tools: true
-
-    - name: Deploy status page
-      ansible.windows.win_copy:
-        dest: C:\inetpub\wwwroot\index.html
-        content: "Status: {{ ansible_hostname }}\r\n\r\nDeployed by Ansible Automation Platform"
-
-    - name: Start W3SVC service
-      ansible.windows.win_service:
-        name: W3SVC
-        state: started
-      when: not ansible_check_mode
-
-    - name: Verify IIS responds with HTTP 200
-      ansible.windows.win_uri:
-        url: http://localhost/
-        status_code: 200
-      when: not ansible_check_mode
+    - name: Nothing here yet
+      ansible.builtin.fail:
+        msg: "windows_iis.yml is still the placeholder - ask the assistant to write it."
