@@ -28,6 +28,7 @@
       ansible.windows.win_service:
         name: W3SVC
         state: started
+      when: not ansible_check_mode
 
     - name: Retrieve IIS default page
       ansible.builtin.uri:
